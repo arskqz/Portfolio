@@ -1,4 +1,28 @@
-@tailwind base;
-@tailwind utilities;
-@tailwind components;
+@import "tailwindcss";
 
+@theme {
+  --color-bg: #37353a;
+  --color-bg-light: #45434a;
+  --color-accent: #00FFFF;
+  --font-sans: "Inter", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes vesi-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 255, 255, 0); }
+}
+
+@keyframes vesi-dot {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+.vesi-typing-dot {
+  animation: vesi-dot 1.4s infinite;
+}
+.vesi-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.vesi-typing-dot:nth-child(3) { animation-delay: 0.4s; }
