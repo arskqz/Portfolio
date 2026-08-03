@@ -1,4 +1,4 @@
-const DIALOGUE = {
+const DIALOGUE = { // Cool idea maybe ill come back to it
   opening: {
     message: "...You actually clicked. Hm. Most people just scroll past.",
     options: [
@@ -153,7 +153,7 @@ function createVesiToggle() {
     width: "72px",
     height: "72px",
     borderRadius: "50%",
-    border: `2px solid ${ACCENT}33`,
+    border: `2px solid ${ACCENT}88`,
     background: BG_DARK,
     cursor: "pointer",
     overflow: "hidden",
@@ -164,13 +164,14 @@ function createVesiToggle() {
     opacity: "0",
     transform: "scale(0.5)",
     transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease",
+    clipPath: "circle(50%)",
   } : {
     position: "fixed",
     bottom: "0",
-    right: "4rem",
+    right: "8rem",
     zIndex: "9999",
-    width: "220px",
-    height: "300px",
+    width: "280px",
+    height: "400px",
     border: "none",
     background: "transparent",
     cursor: "pointer",
@@ -183,15 +184,6 @@ function createVesiToggle() {
     transform: "translateY(100%)",
     transition: "transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease",
   });
-
-  if (!_isMobile) {
-    btn.addEventListener("mouseenter", () => {
-      btn.style.transform = "translateY(0) scale(1.03)";
-    });
-    btn.addEventListener("mouseleave", () => {
-      btn.style.transform = "translateY(0) scale(1)";
-    });
-  }
 
   const canvasWrap = document.createElement("div");
   canvasWrap.id = "vesi-toggle-canvas";
@@ -242,13 +234,9 @@ function showVesiBubble(text, toggleBtn) {
     pointerEvents: "none",
     backdropFilter: "blur(8px)",
   });
-  if (_isMobile) {
-    bubble.style.bottom = "92px";
-    bubble.style.right = "1rem";
-  } else {
-    bubble.style.bottom = "310px";
-    bubble.style.right = "4rem";
-  }
+  const btnRect = toggleBtn.getBoundingClientRect();
+  bubble.style.bottom = (window.innerHeight - btnRect.top + 8) + "px";
+  bubble.style.right = (window.innerWidth - btnRect.right + btnRect.width / 2 - 40) + "px";
   bubble.textContent = text;
 
   const pointer = document.createElement("div");
@@ -262,20 +250,18 @@ function showVesiBubble(text, toggleBtn) {
     borderTop: "none",
     borderLeft: "none",
     transform: "rotate(45deg)",
+    right: _isMobile ? "20px" : "40px",
   });
-  if (_isMobile) {
-    pointer.style.right = "20px";
-  } else {
-    pointer.style.right = "100px";
-  }
   bubble.appendChild(pointer);
 
   document.body.appendChild(bubble);
   _activeBubble = bubble;
 
   requestAnimationFrame(() => {
-    bubble.style.opacity = "1";
-    bubble.style.transform = "translateY(0)";
+    requestAnimationFrame(() => {
+      bubble.style.opacity = "1";
+      bubble.style.transform = "translateY(0)";
+    });
   });
 
   toggleBtn.addEventListener(
@@ -308,30 +294,19 @@ function createVesiOverlay() {
     background: BG_DARK,
     clipPath: _isMobile
       ? "circle(0% at calc(100% - 52px) calc(100% - 52px))"
-      : "circle(0% at calc(100% - 144px) calc(100% - 150px))",
+      : "circle(0% at calc(100% - 268px) calc(100% - 200px))",
     transition: "clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
     display: "flex",
     flexDirection: "column",
     fontFamily: "Inter, sans-serif",
   });
 
-  const grid = document.createElement("div");
-  Object.assign(grid.style, {
-    position: "absolute",
-    inset: "0",
-    backgroundImage:
-      "linear-gradient(rgba(0,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.04) 1px, transparent 1px)",
-    backgroundSize: "50px 50px",
-    pointerEvents: "none",
-  });
-  overlay.appendChild(grid);
-
   const glow = document.createElement("div");
   Object.assign(glow.style, {
     position: "absolute",
     inset: "0",
     background:
-      "radial-gradient(ellipse at 50% 70%, rgba(0,255,255,0.06) 0%, transparent 50%)",
+      "radial-gradient(ellipse at 50% 60%, rgba(0,255,255,0.04) 0%, transparent 60%)",
     pointerEvents: "none",
   });
   overlay.appendChild(glow);
@@ -385,16 +360,16 @@ function createVesiOverlay() {
   const dialogueBox = document.createElement("div");
   Object.assign(dialogueBox.style, {
     position: "absolute",
-    bottom: "2rem",
+    bottom: "1.5rem",
     left: "50%",
     transform: "translateX(-50%)",
-    width: "min(700px, calc(100% - 2rem))",
+    width: _isMobile ? "calc(100% - 2rem)" : "min(550px, 60%)",
     zIndex: "2",
-    background: "rgba(0,0,0,0.75)",
-    border: `2px solid ${ACCENT}44`,
+    background: "rgba(0,0,0,0.8)",
+    border: `1px solid ${ACCENT}33`,
     borderRadius: "8px",
-    padding: "1.5rem",
-    backdropFilter: "blur(8px)",
+    padding: _isMobile ? "1.25rem" : "1.25rem 1.5rem",
+    backdropFilter: "blur(12px)",
   });
 
   dialogueBox.addEventListener("click", (e) => {
@@ -502,21 +477,18 @@ async function initVRM(toggleContainer, overlayContainer) {
 
       scene.add(new THREE.AmbientLight(0xffffff, cameraOpts.ambient || 1.5));
       const dir = new THREE.DirectionalLight(0xffffff, cameraOpts.dir || 1.2);
-      dir.position.set(1, 2, 3);
+      dir.position.set(2, 3, 3);
       scene.add(dir);
-
-      if (cameraOpts.rim) {
-        const rim = new THREE.PointLight(0x00ffff, 0.3, 10);
-        rim.position.set(0, 0, 1);
-        scene.add(rim);
-      }
+      const fill = new THREE.DirectionalLight(0xaaccff, 0.3);
+      fill.position.set(-2, 2, 2);
+      scene.add(fill);
 
       return { renderer, scene, camera };
     }
 
     const tScene = _isMobile
-      ? createScene(144, 144, { fov: 16, pos: [0, 1.42, 1.6], lookAt: [0, 1.38, 0], ambient: 1.4, dir: 1.0 })
-      : createScene(440, 600, { fov: 24, pos: [0, 1.15, 2.8], lookAt: [0, 1.1, 0], ambient: 1.4, dir: 1.0 });
+      ? createScene(144, 144, { fov: 16, pos: [0, 1.18, 1.6], lookAt: [0, 1.18, 0], ambient: 1.4, dir: 1.0 })
+      : createScene(440, 600, { fov: 18, pos: [0.2, 1.05, 2], lookAt: [0, 1.1, 0], ambient: 1.4, dir: 1.0 });
     const tCanvas = tScene.renderer.domElement;
     tCanvas.style.width = "100%";
     tCanvas.style.height = "100%";
@@ -524,15 +496,28 @@ async function initVRM(toggleContainer, overlayContainer) {
 
     const oW = window.innerWidth;
     const oH = window.innerHeight;
-    const oScene = createScene(oW, oH, {
-      fov: 22,
-      pos: [0, 1.2, 3.0],
-      lookAt: [0, 1.15, 0],
-      ambient: 1.0,
-      dir: 1.5,
-      rim: true,
-    });
-    const oCanvas = oScene.renderer.domElement;
+    const oRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    oRenderer.setSize(oW, oH);
+    oRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    oRenderer.outputColorSpace = THREE.SRGBColorSpace;
+    const oSceneObj = new THREE.Scene();
+    const oCamera = new THREE.PerspectiveCamera(60, oW / oH, 0.1, 100);
+    oCamera.position.set(0, 1.0, 0.8);
+    oCamera.lookAt(0, 1.0, 0);
+
+    oSceneObj.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.2);
+    keyLight.position.set(2, 3, 3);
+    oSceneObj.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xaaccff, 0.2);
+    fillLight.position.set(-2, 2, 2);
+    oSceneObj.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0xffaadd, 0.15);
+    rimLight.position.set(0, 2, -3);
+    oSceneObj.add(rimLight);
+
+    const oScene = { renderer: oRenderer, scene: oSceneObj, camera: oCamera };
+    const oCanvas = oRenderer.domElement;
     oCanvas.style.width = "100%";
     oCanvas.style.height = "100%";
     overlayContainer.appendChild(oCanvas);
@@ -540,38 +525,33 @@ async function initVRM(toggleContainer, overlayContainer) {
     window.addEventListener("resize", () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      oScene.renderer.setSize(w, h);
-      oScene.camera.aspect = w / h;
-      oScene.camera.updateProjectionMatrix();
+      oRenderer.setSize(w, h);
+      oCamera.aspect = w / h;
+      oCamera.updateProjectionMatrix();
     });
 
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
 
-    const gltf = await loader.loadAsync("src/models/8590256991748008892.glb");
+    const gltf = await loader.loadAsync("src/models/Vesi_00.vrm");
     const vrm = gltf.userData.vrm;
-    VRMUtils.removeUnnecessaryJoints(vrm.scene);
+    VRMUtils.combineSkeletons(vrm.scene);
     VRMUtils.removeUnnecessaryVertices(vrm.scene);
     VRMUtils.rotateVRM0(vrm);
-    
-    if (vesiMode === "overlay") {
-      oScene.scene.add(vrm.scene);
-    } else {
-      tScene.scene.add(vrm.scene);
-    }
-
-    const clock = new THREE.Clock();
-    let lastBlinkTime = 0;
-    let blinkPhase = 0;
-    let poseBlendFactor = 0;
 
     const IDLE_POSE = {
-      leftUpperArm:  { x: 0.2,  y: 0.0,  z: 0.3  },
-      leftLowerArm:  { x: -0.3, y: 0.0,  z: 0.1  },
-      leftHand:      { x: 0.4,  y: 0.0,  z: 0.1  },
-      rightUpperArm: { x: 0.2,  y: 0.0,  z: -0.3 },
-      rightLowerArm: { x: -0.3, y: 0.0,  z: -0.1 },
-      rightHand:     { x: 0.4,  y: 0.0,  z: -0.1 },
+      leftUpperArm:  { x: 0.6,  y: 0.1,  z: 1.1  },
+      leftLowerArm:  { x: -0.75, y: 0.0, z: 1.0  },
+      leftHand:      { x: 0.0,  y: 0.0,  z: 0.2  },
+      rightUpperArm: { x: 0.6,  y: -0.1, z: -1.1 },
+      rightLowerArm: { x: -0.75, y: 0.0, z: -1.0 },
+      rightHand:     { x: -2.0, y: 0.0,  z: -0.2 },
+    };
+
+    const WAVE_POSE = {
+      rightUpperArm: { x: 0.4,  y: 0.0,  z: -0.3 },
+      rightLowerArm: { x: -1.4, y: 0.0,  z: 0.0  },
+      rightHand:     { x: 0.0,  y: 0.0,  z: 0.0  },
     };
 
     const FINGER_CURL = {
@@ -582,10 +562,95 @@ async function initVRM(toggleContainer, overlayContainer) {
       Little: { Proximal: 0.8, Intermediate: 0.9, Distal: 0.7 },
     };
 
+    let _animState = "idle";
+    let _waveTimer = 0;
+
+    function lerpBone(bone, target, t) {
+      bone.rotation.x += (target.x - bone.rotation.x) * t;
+      bone.rotation.y += (target.y - bone.rotation.y) * t;
+      bone.rotation.z += (target.z - bone.rotation.z) * t;
+    }
+
+    function applyIdlePose() {
+      vrm.humanoid.resetNormalizedPose();
+      for (const [boneName, targetRot] of Object.entries(IDLE_POSE)) {
+        const bone = vrm.humanoid?.getNormalizedBoneNode(boneName);
+        if (bone) {
+          bone.rotation.x = targetRot.x;
+          bone.rotation.y = targetRot.y;
+          bone.rotation.z = targetRot.z;
+        }
+      }
+      for (const [fingerName, joints] of Object.entries(FINGER_CURL)) {
+        for (const side of ["left", "right"]) {
+          for (const [joint, angle] of Object.entries(joints)) {
+            const bone = vrm.humanoid?.getNormalizedBoneNode(`${side}${fingerName}${joint}`);
+            if (bone) bone.rotation.x = angle;
+          }
+        }
+      }
+    }
+
+    function applyWave(elapsed, delta) {
+      _waveTimer += delta;
+      const t = Math.min(1, _waveTimer * 3);
+
+      for (const [boneName, target] of Object.entries(WAVE_POSE)) {
+        const bone = vrm.humanoid?.getNormalizedBoneNode(boneName);
+        if (bone) lerpBone(bone, target, t);
+      }
+
+      const hand = vrm.humanoid?.getNormalizedBoneNode("rightHand");
+      if (hand && t > 0.5) {
+        hand.rotation.z = Math.sin(elapsed * 8) * 0.4;
+      }
+
+      if (_waveTimer > 2.0) {
+        _animState = "idle";
+        _waveTimer = 0;
+      }
+    }
+
+    let _emotionBlend = 0;
+    let _currentEmotionTarget = 0;
+
+    function applyEmotionPose(emotion, delta) {
+      if (emotion === "surprised") _currentEmotionTarget = 0.15;
+      else if (emotion === "angry") _currentEmotionTarget = -0.18;
+      else if (emotion === "happy") _currentEmotionTarget = 0.08;
+      else _currentEmotionTarget = 0;
+
+      _emotionBlend += (_currentEmotionTarget - _emotionBlend) * Math.min(1, 3 * delta);
+
+      const spine = vrm.humanoid?.getNormalizedBoneNode("spine");
+      if (spine) spine.rotation.x = _emotionBlend;
+
+      const upperChest = vrm.humanoid?.getNormalizedBoneNode("upperChest");
+      if (upperChest) upperChest.rotation.x = _emotionBlend * 0.6;
+
+      const neck = vrm.humanoid?.getNormalizedBoneNode("neck");
+      if (neck) {
+        if (emotion === "surprised") neck.rotation.x = _emotionBlend * 0.3;
+        else if (emotion === "angry") neck.rotation.x = _emotionBlend * -0.4;
+      }
+    }
+
+    applyIdlePose();
+    vrm.update(0);
+
+    if (vesiMode === "overlay") {
+      oScene.scene.add(vrm.scene);
+    } else {
+      tScene.scene.add(vrm.scene);
+    }
+
+    const clock = new THREE.Clock();
+    let lastBlinkTime = 0;
+    let blinkPhase = 0;
+
     const MOUTH_EXPRESSIONS = ["aa", "ih", "ou", "ee", "oh"];
     const EMOTION_EXPRESSIONS = ["happy", "angry", "surprised", "relaxed", "sad"];
     const MOUTH_LERP_SPEED = 12;
-    const POSE_BLEND_SPEED = 2.0;
 
     function animate() {
       requestAnimationFrame(animate);
@@ -594,9 +659,10 @@ async function initVRM(toggleContainer, overlayContainer) {
       const delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
-      const bobAmplitude = _talkingState.active ? 0.006 : 0.003;
-      vrm.scene.position.y = Math.sin(elapsed * 1.2) * bobAmplitude;
+      // 1. Reset + idle pose (base layer)
+      applyIdlePose();
 
+      // 2. Head animation (on top of idle)
       const headBone = vrm.humanoid?.getNormalizedBoneNode("head");
       if (headBone) {
         const headYaw = Math.sin(elapsed * 0.4) * 0.05;
@@ -608,16 +674,24 @@ async function initVRM(toggleContainer, overlayContainer) {
         } else {
           headBone.rotation.y = headYaw;
           headBone.rotation.x = headPitch;
-          headBone.rotation.z *= Math.max(0, 1 - 4 * delta);
         }
       }
 
-      const spineBone = vrm.humanoid?.getNormalizedBoneNode("spine");
-      if (spineBone) {
-        const spineTarget = _talkingState.active ? -0.02 : 0;
-        spineBone.rotation.x += (spineTarget - spineBone.rotation.x) * Math.min(1, 3 * delta);
+      // 3. Spine lean when talking (toggle side only)
+      if (_talkingState.active && vesiMode === "toggle") {
+        const spineBone = vrm.humanoid?.getNormalizedBoneNode("spine");
+        if (spineBone) spineBone.rotation.x = -0.02;
       }
 
+      // 4. Overlay animations
+      if (_animState === "wave") {
+        applyWave(elapsed, delta);
+      }
+      if (vesiMode === "overlay") {
+        applyEmotionPose(_talkingState.active ? _talkingState.emotion : "relaxed", delta);
+      }
+
+      // 5. Expressions (face)
       if (vrm.expressionManager) {
         if (_talkingState.active) {
           const targetViseme = getViseme(_talkingState.currentChar);
@@ -631,7 +705,7 @@ async function initVRM(toggleContainer, overlayContainer) {
           });
           EMOTION_EXPRESSIONS.forEach((em) => {
             const current = vrm.expressionManager.getValue(em) || 0;
-            const target = em === _talkingState.emotion ? 0.25 : 0;
+            const target = em === _talkingState.emotion ? 0.5 : 0;
             vrm.expressionManager.setValue(
               em,
               current + (target - current) * Math.min(1, 4 * delta),
@@ -671,33 +745,19 @@ async function initVRM(toggleContainer, overlayContainer) {
         vrm.expressionManager.update();
       }
 
-      vrm.update(delta);
-
-      poseBlendFactor = Math.min(1, poseBlendFactor + POSE_BLEND_SPEED * delta);
-
-      for (const [boneName, targetRot] of Object.entries(IDLE_POSE)) {
-        const bone = vrm.humanoid?.getNormalizedBoneNode(boneName);
-        if (bone) {
-          bone.rotation.x += (targetRot.x - bone.rotation.x) * poseBlendFactor;
-          bone.rotation.y += (targetRot.y - bone.rotation.y) * poseBlendFactor;
-          bone.rotation.z += (targetRot.z - bone.rotation.z) * poseBlendFactor;
-        }
-      }
-
-      for (const [fingerName, joints] of Object.entries(FINGER_CURL)) {
-        for (const side of ["left", "right"]) {
-          for (const [joint, angle] of Object.entries(joints)) {
-            const bone = vrm.humanoid?.getNormalizedBoneNode(`${side}${fingerName}${joint}`);
-            if (bone) bone.rotation.x += (angle - bone.rotation.x) * poseBlendFactor;
-          }
-        }
-      }
-
+      // 6. Breathing (additive)
       const lArm = vrm.humanoid?.getNormalizedBoneNode("leftUpperArm");
       const rArm = vrm.humanoid?.getNormalizedBoneNode("rightUpperArm");
-      const breathe = Math.sin(elapsed * 1.0) * 0.005 * poseBlendFactor;
+      const breathe = Math.sin(elapsed * 1.0) * 0.005;
       if (lArm) lArm.rotation.z += breathe;
       if (rArm) rArm.rotation.z -= breathe;
+
+      // 7. Bob
+      const bobAmplitude = _talkingState.active ? 0.006 : 0.003;
+      vrm.scene.position.y = Math.sin(elapsed * 1.2) * bobAmplitude;
+
+      // 8. Sync normalized → raw, then render
+      vrm.update(delta);
 
       if (vesiMode === "toggle") {
         tScene.renderer.render(tScene.scene, tScene.camera);
@@ -715,6 +775,10 @@ async function initVRM(toggleContainer, overlayContainer) {
         if (m === "toggle") tScene.scene.add(vrm.scene);
         if (m === "overlay") oScene.scene.add(vrm.scene);
         vesiMode = m;
+      },
+      wave() {
+        _animState = "wave";
+        _waveTimer = 0;
       },
     };
   } catch (e) {
@@ -763,14 +827,17 @@ document.addEventListener("DOMContentLoaded", () => {
     overlayOpen = true;
     overlay.style.clipPath = _isMobile
       ? "circle(150% at calc(100% - 52px) calc(100% - 52px))"
-      : "circle(150% at calc(100% - 144px) calc(100% - 150px))";
+      : "circle(150% at calc(100% - 268px) calc(100% - 200px))";
     toggleBtn.style.display = "none";
     if (_activeBubble) {
       _activeBubble.style.opacity = "0";
       setTimeout(() => { if (_activeBubble) _activeBubble.remove(); _activeBubble = null; }, 300);
     }
     vesiMode = "overlay";
-    if (window.vesiAvatar) window.vesiAvatar.setMode("overlay");
+    if (window.vesiAvatar) {
+      window.vesiAvatar.setMode("overlay");
+      window.vesiAvatar.wave();
+    }
     sessionStorage.setItem("vesi-interacted", "1");
     showDialogue("opening", textEl, choicesEl);
   });
@@ -779,7 +846,7 @@ document.addEventListener("DOMContentLoaded", () => {
     overlayOpen = false;
     overlay.style.clipPath = _isMobile
       ? "circle(0% at calc(100% - 52px) calc(100% - 52px))"
-      : "circle(0% at calc(100% - 144px) calc(100% - 150px))";
+      : "circle(0% at calc(100% - 268px) calc(100% - 200px))";
     toggleBtn.style.display = "flex";
     vesiMode = "toggle";
     if (window.vesiAvatar) window.vesiAvatar.setMode("toggle");
